@@ -20,7 +20,7 @@ mongoose.connect("mongodb://okimi:noesajalah@ac-nvqmtge-shard-00-00.vrjz2x5.mong
 .then(() => console.log("✅ MongoDB connected"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
-app.listen(PORT, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 
   app.get('/healthz', (req, res) => {
