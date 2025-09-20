@@ -22,4 +22,9 @@ mongoose.connect("mongodb://okimi:noesajalah@ac-nvqmtge-shard-00-00.vrjz2x5.mong
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+  app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 });
