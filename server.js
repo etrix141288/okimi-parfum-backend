@@ -15,10 +15,16 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/produk", produkRoutes);
 app.use("/api/auth", authRoutes);
 
-// Health check endpoint
+// Default route
+app.get("/", (req, res) => {
+  res.send("✅ OKIMI Parfum Backend is running. Use /api/... endpoints.");
+});
+
+// Health check route
 app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
 
 // MongoDB connection
 mongoose.connect(MONGODB_URI, {
