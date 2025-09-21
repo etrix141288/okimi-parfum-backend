@@ -49,7 +49,7 @@ app.get("/", (req, res) => {
           }
           a.try-btn:hover { background: #005f99; }
           form { background: #fff; padding: 15px; border-radius: 5px; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-          input, textarea { width: 100%; padding: 8px; margin: 5px 0 10px; border: 1px solid #ccc; border-radius: 4px; }
+          input { width: 100%; padding: 8px; margin: 5px 0 10px; border: 1px solid #ccc; border-radius: 4px; }
           button { background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; }
           button:hover { background: #218838; }
           .result { background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; margin-top: 10px; white-space: pre-wrap; }
@@ -59,6 +59,12 @@ app.get("/", (req, res) => {
         <h1>OKIMI Parfum Backend</h1>
         <p>Status: ✅ Running</p>
         <p>Version: 1.0.0</p>
+
+        <h2>Default Admin</h2>
+        <pre>
+Username: okimi
+Password: noesajalah
+        </pre>
 
         <h2>Available Endpoints</h2>
         <table>
@@ -77,24 +83,10 @@ app.get("/", (req, res) => {
             <td><a class="try-btn" href="/api/produk" target="_blank">Try</a></td>
           </tr>
           <tr>
-            <td>Auth</td>
-            <td>POST</td>
-            <td class="endpoint">/api/auth/register</td>
-            <td>Register user baru</td>
-            <td>Form ↓</td>
-          </tr>
-          <tr>
-            <td>Auth</td>
-            <td>POST</td>
-            <td class="endpoint">/api/auth/login</td>
-            <td>Login user</td>
-            <td>Form ↓</td>
-          </tr>
-          <tr>
             <td>Produk</td>
             <td>POST</td>
             <td class="endpoint">/api/produk</td>
-            <td>Buat produk baru</td>
+            <td>Buat produk baru (auth required)</td>
             <td>Form ↓</td>
           </tr>
           <tr>
@@ -106,93 +98,75 @@ app.get("/", (req, res) => {
           </tr>
         </table>
 
-        <h2>🔹 Test API</h2>
-
-        <h3>Register User</h3>
-        <form id="registerForm">
-          <input type="text" id="regUsername" placeholder="Username" required />
-          <input type="password" id="regPassword" placeholder="Password" required />
-          <button type="submit">Send</button>
-        </form>
-        <div id="registerResult" class="result"></div>
-
-        <h3>Login User</h3>
+        <h2>🔑 Login (Ambil Token)</h2>
         <form id="loginForm">
-          <input type="text" id="loginUsername" placeholder="Username" required />
-          <input type="password" id="loginPassword" placeholder="Password" required />
-          <button type="submit">Send</button>
+          <input type="text" id="loginUser" placeholder="Username" value="okimi" required />
+          <input type="password" id="loginPass" placeholder="Password" value="noesajalah" required />
+          <button type="submit">Login</button>
         </form>
         <div id="loginResult" class="result"></div>
 
-        <h3>Create Produk</h3>
+        <h2>🛒 Create Produk</h2>
         <form id="produkForm">
           <input type="text" id="produkNama" placeholder="Nama Produk" required />
           <input type="number" id="produkHarga" placeholder="Harga" required />
           <input type="number" id="produkStok" placeholder="Stok" required />
+          <input type="text" id="produkToken" placeholder="Bearer Token" required />
           <button type="submit">Send</button>
         </form>
         <div id="produkResult" class="result"></div>
 
         <script>
-  // Helper for POST requests
-  async function postData(url = "", data = {}) {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      const result = await response.json();
-      console.log("✅ Response from", url, result); // DEBUG
-      return result;
-    } catch (err) {
-      console.error("❌ Fetch error:", err);
-      return { error: err.message };
-    }
-  }
+          async function postData(url = "", data = {}, token = "") {
+            try {
+              const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token ? { "Authorization": "Bearer " + token } : {})
+                },
+                body: JSON.stringify(data)
+              });
+              const result = await response.json();
+              return result;
+            } catch (err) {
+              return { error: err.message };
+            }
+          }
 
-  // Register Form
-  document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("▶ Register form submitted"); // DEBUG
-    const data = {
-      username: document.getElementById("regUsername").value,
-      password: document.getElementById("regPassword").value
-    };
-    const result = await postData("/api/auth/register", data);
-    document.getElementById("registerResult").innerText = JSON.stringify(result, null, 2);
-  });
+          // Login form
+          document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+              username: document.getElementById("loginUser").value,
+              password: document.getElementById("loginPass").value
+            };
+            const result = await postData("/api/auth/login", data);
+            document.getElementById("loginResult").innerText = JSON.stringify(result, null, 2);
 
-  // Login Form
-  document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("▶ Login form submitted"); // DEBUG
-    const data = {
-      username: document.getElementById("loginUsername").value,
-      password: document.getElementById("loginPassword").value
-    };
-    const result = await postData("/api/auth/login", data);
-    document.getElementById("loginResult").innerText = JSON.stringify(result, null, 2);
-  });
+            if (result.token) {
+              document.getElementById("produkToken").value = result.token;
+            }
+          });
 
-  // Produk Form
-  document.getElementById("produkForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("▶ Produk form submitted"); // DEBUG
-    const data = {
-      nama: document.getElementById("produkNama").value,
-      harga: parseInt(document.getElementById("produkHarga").value),
-      stok: parseInt(document.getElementById("produkStok").value)
-    };
-    const result = await postData("/api/produk", data);
-    document.getElementById("produkResult").innerText = JSON.stringify(result, null, 2);
-  });
-</script>
-
+          // Produk form
+          document.getElementById("produkForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+              nama: document.getElementById("produkNama").value,
+              harga: parseInt(document.getElementById("produkHarga").value),
+              stok: parseInt(document.getElementById("produkStok").value)
+            };
+            const token = document.getElementById("produkToken").value;
+            const result = await postData("/api/produk", data, token);
+            document.getElementById("produkResult").innerText = JSON.stringify(result, null, 2);
+          });
+        </script>
       </body>
     </html>
   `);
 });
+
 
 
 // Start server
