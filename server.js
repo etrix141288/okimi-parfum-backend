@@ -47,8 +47,8 @@ app.get("/", (req, res) => {
 
         <h2>Login</h2>
         <form id="loginForm">
-          <input id="loginUser" value="okimi" />
-          <input id="loginPass" type="password" value="noesajalah" />
+          <input id="loginUser" value="" />
+          <input id="loginPass" type="password" value="" />
           <button type="submit">Login</button>
         </form>
         <div id="loginResult" class="result"></div>
