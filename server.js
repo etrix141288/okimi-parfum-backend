@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
       </head>
       <body>
         <h1>OKIMI Parfum API</h1>
-        <p>Default Admin → <b>okimi / noesajalah</b></p>
+        <p>Default Admin → <b></b></p>
 
         <h2>Login</h2>
         <form id="loginForm">
