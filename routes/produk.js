@@ -1,38 +1,55 @@
 import express from "express";
 import Produk from "../models/Produk.js";
+import jwt from "jsonwebtoken";
 import multer from "multer";
+import path from "path";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
+const JWT_SECRET = process.env.JWT_SECRET || "okimiparfumsecret";
 
-// Ambil semua produk
+// Middleware auth
+function auth(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(401).json({ message: "No token" });
+
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Invalid token" });
+    req.user = user;
+    next();
+  });
+}
+
+// Konfigurasi multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+// GET semua produk
 router.get("/", async (req, res) => {
   const produk = await Produk.find();
   res.json(produk);
 });
 
-// Tambah produk
-router.post("/", upload.single("gambar"), async (req, res) => {
-  const { nama, deskripsi, harga, kategori } = req.body;
-  const gambar = req.file ? `/uploads/${req.file.filename}` : "";
-  const newProduk = new Produk({ nama, deskripsi, harga, kategori, gambar });
-  await newProduk.save();
-  res.json(newProduk);
-});
+// POST produk baru dengan gambar
+router.post("/", auth, upload.single("gambar"), async (req, res) => {
+  try {
+    const { nama, harga, stok } = req.body;
+    const gambar = req.file ? "/uploads/" + req.file.filename : null;
 
-// Update produk
-router.put("/:id", upload.single("gambar"), async (req, res) => {
-  const { nama, deskripsi, harga, kategori } = req.body;
-  const updateData = { nama, deskripsi, harga, kategori };
-  if(req.file) updateData.gambar = `/uploads/${req.file.filename}`;
-  const updated = await Produk.findByIdAndUpdate(req.params.id, updateData, { new: true });
-  res.json(updated);
-});
+    const produk = new Produk({ nama, harga, stok, gambar });
+    await produk.save();
 
-// Hapus produk
-router.delete("/:id", async (req, res) => {
-  await Produk.findByIdAndDelete(req.params.id);
-  res.json({ message: "Produk dihapus" });
+    res.json({ message: "Produk dibuat", produk });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
