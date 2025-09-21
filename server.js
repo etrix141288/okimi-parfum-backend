@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.js";
 const app = express();
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors({
   origin: ["https://okimi-parfum.netlify.app"];
