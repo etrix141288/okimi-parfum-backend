@@ -12,22 +12,23 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+// Routes
 app.use("/api/produk", produkRoutes);
 app.use("/api/auth", authRoutes);
 
-// Health check route
+// Health check
 app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-
 // MongoDB connection
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.error("❌ MongoDB connection error:", err));
+mongoose
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Interactive API Docs Page
 app.get("/", (req, res) => {
@@ -90,6 +91,13 @@ Password: noesajalah
             <td>Form ↓</td>
           </tr>
           <tr>
+            <td>Auth</td>
+            <td>POST</td>
+            <td class="endpoint">/api/auth/init</td>
+            <td>Buat admin default (okimi/noesajalah)</td>
+            <td><a class="try-btn" href="/api/auth/init" target="_blank">Try</a></td>
+          </tr>
+          <tr>
             <td>Health</td>
             <td>GET</td>
             <td class="endpoint">/healthz</td>
@@ -97,6 +105,12 @@ Password: noesajalah
             <td><a class="try-btn" href="/healthz" target="_blank">Try</a></td>
           </tr>
         </table>
+
+        <h2>⚡ Init Admin</h2>
+        <div class="box">
+          <button id="initBtn">Buat Admin Default</button>
+          <div id="initResult" class="result"></div>
+        </div>
 
         <h2>🔑 Login (Ambil Token)</h2>
         <form id="loginForm">
@@ -134,6 +148,23 @@ Password: noesajalah
             }
           }
 
+          // Init admin
+          document.getElementById("initBtn").addEventListener("click", async (e) => {
+            e.target.disabled = true;
+            e.target.innerText = "Processing...";
+            const result = await postData("/api/auth/init", {});
+            document.getElementById("initResult").innerText = JSON.stringify(result, null, 2);
+
+            if (result.message && result.message.includes("sudah ada")) {
+              e.target.innerText = "Admin sudah ada ✅";
+            } else if (result.message && result.message.includes("dibuat")) {
+              e.target.innerText = "Admin dibuat ✅";
+            } else {
+              e.target.innerText = "Gagal buat admin ❌";
+              e.target.disabled = false;
+            }
+          });
+
           // Login form
           document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -167,8 +198,7 @@ Password: noesajalah
   `);
 });
 
-
 // Start server
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(\`🚀 Server running on port \${PORT}\`);
 });
