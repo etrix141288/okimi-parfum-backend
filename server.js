@@ -134,50 +134,61 @@ app.get("/", (req, res) => {
         <div id="produkResult" class="result"></div>
 
         <script>
-          // Helper for POST requests
-          async function postData(url = "", data = {}) {
-            const response = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data)
-            });
-            return response.json();
-          }
+  // Helper for POST requests
+  async function postData(url = "", data = {}) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      console.log("✅ Response from", url, result); // DEBUG
+      return result;
+    } catch (err) {
+      console.error("❌ Fetch error:", err);
+      return { error: err.message };
+    }
+  }
 
-          // Register Form
-          document.getElementById("registerForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const data = {
-              username: document.getElementById("regUsername").value,
-              password: document.getElementById("regPassword").value
-            };
-            const result = await postData("/api/auth/register", data);
-            document.getElementById("registerResult").innerText = JSON.stringify(result, null, 2);
-          });
+  // Register Form
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("▶ Register form submitted"); // DEBUG
+    const data = {
+      username: document.getElementById("regUsername").value,
+      password: document.getElementById("regPassword").value
+    };
+    const result = await postData("/api/auth/register", data);
+    document.getElementById("registerResult").innerText = JSON.stringify(result, null, 2);
+  });
 
-          // Login Form
-          document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const data = {
-              username: document.getElementById("loginUsername").value,
-              password: document.getElementById("loginPassword").value
-            };
-            const result = await postData("/api/auth/login", data);
-            document.getElementById("loginResult").innerText = JSON.stringify(result, null, 2);
-          });
+  // Login Form
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("▶ Login form submitted"); // DEBUG
+    const data = {
+      username: document.getElementById("loginUsername").value,
+      password: document.getElementById("loginPassword").value
+    };
+    const result = await postData("/api/auth/login", data);
+    document.getElementById("loginResult").innerText = JSON.stringify(result, null, 2);
+  });
 
-          // Produk Form
-          document.getElementById("produkForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const data = {
-              nama: document.getElementById("produkNama").value,
-              harga: parseInt(document.getElementById("produkHarga").value),
-              stok: parseInt(document.getElementById("produkStok").value)
-            };
-            const result = await postData("/api/produk", data);
-            document.getElementById("produkResult").innerText = JSON.stringify(result, null, 2);
-          });
-        </script>
+  // Produk Form
+  document.getElementById("produkForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("▶ Produk form submitted"); // DEBUG
+    const data = {
+      nama: document.getElementById("produkNama").value,
+      harga: parseInt(document.getElementById("produkHarga").value),
+      stok: parseInt(document.getElementById("produkStok").value)
+    };
+    const result = await postData("/api/produk", data);
+    document.getElementById("produkResult").innerText = JSON.stringify(result, null, 2);
+  });
+</script>
+
       </body>
     </html>
   `);
