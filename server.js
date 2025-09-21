@@ -91,6 +91,13 @@ Password: noesajalah
             <td>Form ↓</td>
           </tr>
           <tr>
+            <td>Auth</td>
+            <td>POST</td>
+            <td class="endpoint">/api/auth/init</td>
+            <td>Buat admin default (okimi/noesajalah)</td>
+            <td><a class="try-btn" href="/api/auth/init" target="_blank">Try</a></td>
+          </tr>
+          <tr>
             <td>Health</td>
             <td>GET</td>
             <td class="endpoint">/healthz</td>
@@ -99,12 +106,26 @@ Password: noesajalah
           </tr>
         </table>
 
-        <h2>🔹 Create Produk</h2>
+        <h2>⚡ Init Admin</h2>
+        <div class="box">
+          <button id="initBtn">Buat Admin Default</button>
+          <div id="initResult" class="result"></div>
+        </div>
+
+        <h2>🔑 Login (Ambil Token)</h2>
+        <form id="loginForm">
+          <input type="text" id="loginUser" placeholder="Username" value="okimi" required />
+          <input type="password" id="loginPass" placeholder="Password" value="noesajalah" required />
+          <button type="submit">Login</button>
+        </form>
+        <div id="loginResult" class="result"></div>
+
+        <h2>🛒 Create Produk</h2>
         <form id="produkForm">
           <input type="text" id="produkNama" placeholder="Nama Produk" required />
           <input type="number" id="produkHarga" placeholder="Harga" required />
           <input type="number" id="produkStok" placeholder="Stok" required />
-          <input type="text" id="produkToken" placeholder="Bearer Token (dari login)" required />
+          <input type="text" id="produkToken" placeholder="Bearer Token" required />
           <button type="submit">Send</button>
         </form>
         <div id="produkResult" class="result"></div>
@@ -116,7 +137,7 @@ Password: noesajalah
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "Authorization": "Bearer " + token
+                  ...(token ? { "Authorization": "Bearer " + token } : {})
                 },
                 body: JSON.stringify(data)
               });
@@ -127,6 +148,39 @@ Password: noesajalah
             }
           }
 
+          // Init admin
+          document.getElementById("initBtn").addEventListener("click", async (e) => {
+            e.target.disabled = true;
+            e.target.innerText = "Processing...";
+            const result = await postData("/api/auth/init", {});
+            document.getElementById("initResult").innerText = JSON.stringify(result, null, 2);
+
+            if (result.message && result.message.includes("sudah ada")) {
+              e.target.innerText = "Admin sudah ada ✅";
+            } else if (result.message && result.message.includes("dibuat")) {
+              e.target.innerText = "Admin dibuat ✅";
+            } else {
+              e.target.innerText = "Gagal buat admin ❌";
+              e.target.disabled = false;
+            }
+          });
+
+          // Login form
+          document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+              username: document.getElementById("loginUser").value,
+              password: document.getElementById("loginPass").value
+            };
+            const result = await postData("/api/auth/login", data);
+            document.getElementById("loginResult").innerText = JSON.stringify(result, null, 2);
+
+            if (result.token) {
+              document.getElementById("produkToken").value = result.token;
+            }
+          });
+
+          // Produk form
           document.getElementById("produkForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const data = {
@@ -143,7 +197,6 @@ Password: noesajalah
     </html>
   `);
 });
-
 
 // Start server
 app.listen(PORT, "0.0.0.0", () => {
